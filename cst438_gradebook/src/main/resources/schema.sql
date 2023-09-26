@@ -7,6 +7,7 @@ CREATE TABLE course (
   PRIMARY KEY (course_id)
 );
 
+
 CREATE TABLE enrollment (
   id int  NOT NULL AUTO_INCREMENT,
   student_email varchar(255) DEFAULT NULL,
@@ -15,6 +16,7 @@ CREATE TABLE enrollment (
   PRIMARY KEY (id),
   FOREIGN KEY (course_id) REFERENCES course (course_id) on delete cascade 
 );
+
 
 CREATE TABLE assignment (
   id int NOT NULL AUTO_INCREMENT,
@@ -25,6 +27,7 @@ CREATE TABLE assignment (
   FOREIGN KEY (course_id) REFERENCES course (course_id) on delete cascade 
 ) ;
 
+
 CREATE TABLE assignment_grade (
   id int NOT NULL AUTO_INCREMENT,
   score int DEFAULT NULL,
@@ -34,3 +37,4 @@ CREATE TABLE assignment_grade (
   FOREIGN KEY (enrollment_id) REFERENCES enrollment (id) on delete cascade,
   FOREIGN KEY (assignment_id) REFERENCES assignment (id) on delete cascade
 );
+
