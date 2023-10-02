@@ -61,77 +61,53 @@ public class AssignmentController {
 		}
 	}
 
-	@PutMapping("/assignment/changeName/{id}")
-	@Transactional
-	public AssignmentDTO updateAssignment(@RequestBody Assignment assignment2, @PathVariable("id") int  assignmentId) {
-
-		Assignment assignment = assignmentRepository.findById(assignmentId).orElse(null);
-		if (assignment == null) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Assignment not found. " + assignmentId);
+	@PutMapping("/assignment/{id}")
+	public void updateAssignment(@PathVariable("id") int id, @RequestBody AssignmentDTO adto) {
+		// check assignment belongs to a course for this instructor
+		String instructorEmail = "dwisneski@csumb.edu";  // user name (should be instructor's email)
+		Assignment a = assignmentRepository.findById(id).orElse(null);
+		if (a==null || ! a.getCourse().getInstructor().equals(instructorEmail)) {
+			throw  new ResponseStatusException( HttpStatus.NOT_FOUND, "assignment not found or not authorized "+id);
 		}
-
-		assignment2.setId(assignment.getId());
-		assignment2.setCourse(assignment.getCourse());
-		assignment2.getCourse().setCourse_id(assignment.getCourse().getCourse_id());
-
-		assignmentRepository.save(assignment2);
-		AssignmentDTO dto = new AssignmentDTO(
-				assignment.getId(),
-				assignment.getName(),
-				assignment.getDueDate().toString(),
-				assignment.getCourse().getTitle(),
-				assignment.getCourse().getCourse_id());
-		return dto;
+		a.setDueDate( java.sql.Date.valueOf(adto.dueDate()));
+		a.setName(adto.assignmentName());
+		assignmentRepository.save(a);
 	}
 
-
-	@PostMapping("/assignment/{course_id}/new")
+	@PostMapping("/assignment")
 	@Transactional
-	public AssignmentDTO newAssignment(@RequestBody Assignment assignment, @PathVariable int course_id) {
-
-		String email = "dwisneski@csumb.edu";  // user name (should be instructor's email)
-		Course c = courseRepository.findById(course_id).orElse(null);
-		if (!c.getInstructor().equals(email)) {
-			throw new ResponseStatusException( HttpStatus.UNAUTHORIZED, "Not Authorized. " );
+	public void createAssignment(@RequestBody AssignmentDTO adto) {
+		// check that course exists and belongs to this instructor
+		String instructorEmail = "dwisneski@csumb.edu";  // user name (should be instructor's email)
+		Course c = courseRepository.findById(adto.courseId()).orElse(null);
+		if (c==null || ! c.getInstructor().equals(instructorEmail)) {
+			throw  new ResponseStatusException( HttpStatus.BAD_REQUEST, "course id not found or not authorized "+adto.courseId());
 		}
-
-		assignment.setCourse(c);
-		assignmentRepository.save(assignment);
-
-		AssignmentDTO dto = new AssignmentDTO(
-				assignment.getId(),
-				assignment.getName(),
-				assignment.getDueDate().toString(),
-				assignment.getCourse().getTitle(),
-				assignment.getCourse().getCourse_id());
-		return dto;
+		// create and save assignment.  Return generated id to client.
+		Assignment a = new Assignment();
+		a.setCourse(c);
+		a.setDueDate( java.sql.Date.valueOf(adto.dueDate()));
+		a.setName(adto.assignmentName());
+		assignmentRepository.save(a);
 	}
 
-	@DeleteMapping("/assignment/delete/{id}")
-	//
-	// DElete /assignment/delete/1?force=yes
-	@Transactional
-	public void deleteAssignment(@RequestParam ("force") Optional<String> force, @PathVariable("id") int id){
-		Assignment assignment = assignmentRepository.findById(id).orElse(null);
-		if (assignment == null) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Assignment not found. " + id);
+	@DeleteMapping("/assignment/{id}")
+	public void deleteAssignment(@PathVariable("id") int id, @RequestParam("force") Optional<String> force) {
+		// check assignment belongs to a course for this instructor
+		String instructorEmail = "dwisneski@csumb.edu";  // user name (should be instructor's email)
+		Assignment a = assignmentRepository.findById(id).orElse(null);
+		if (a==null) {
+			return;
 		}
-
-		String email = "dwisneski@csumb.edu";
-			Course c = courseRepository.findById(assignment.getCourse().getCourse_id()).orElse(null);
-			if (!c.getInstructor().equals(email)) {
-				throw new ResponseStatusException( HttpStatus.UNAUTHORIZED, "Not Authorized. " );
-			}
-
-			for (Enrollment e: c.getEnrollments()) {
-				for (AssignmentGrade ag : e.getAssignmentGrades()) {
-					if(force.isPresent() == true) {
-						assignmentRepository.delete(assignment);
-					} else if (ag.getScore() != null){
-						throw new ResponseStatusException( HttpStatus.CONFLICT, " Assignment has Grades " );
-					}
-				}
-			}
+		if (! a.getCourse().getInstructor().equals(instructorEmail)) {
+			throw  new ResponseStatusException( HttpStatus.FORBIDDEN, "not authorized "+id);
+		}
+		// does assignment have grades?  if yes, don't delete unless force is specified
+		if (a.getAssignmentGrades().size()==0 || force.isPresent()) {
+			assignmentRepository.deleteById(id);
+		} else {
+			throw  new ResponseStatusException( HttpStatus.BAD_REQUEST, "assignment has grades ");
+		}
 	}
 }
 
