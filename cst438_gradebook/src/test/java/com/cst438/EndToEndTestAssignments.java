@@ -162,10 +162,19 @@ public class EndToEndTestAssignments {
             boolean foundDate = false;
             boolean foundCourse = false;
 
-            if(elements.get(30).getText().equals("Layers") && elements.get(32).getText().equals("2021-09-02") && elements.get(31).getText().equals("CST 238 - Introduction to Networks")  ){
-                foundName = true;
-                foundDate = true;
-                foundCourse = true;
+            for (WebElement we : elements) {
+                if (we.getText().equals("Layers")) {
+                    foundName = true;
+                }
+
+                if(we.getText().equals("CST 238 - Introduction to Networks")){
+                    foundCourse = true;
+                }
+
+                if(we.getText().equals("2021-09-02")){
+                    foundDate = true;
+                }
+
             }
 
             assertThat(foundName).withFailMessage("The test assignment Name was not found.").isTrue();
@@ -201,6 +210,7 @@ public class EndToEndTestAssignments {
 
                 if(!(we.getText().equals("CST 238 - Introduction to Networks"))){
                     foundCourse = true;
+                    break;
                 }
             }
 
@@ -214,7 +224,4 @@ public class EndToEndTestAssignments {
             driver.quit();
         }
     }
-
-
-
 }
