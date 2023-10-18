@@ -15,8 +15,7 @@ insert into assignment (id, due_date, name, course_id) values
 (2, '2021-09-02', 'requirements', 31045),
 (3, '2021-09-02', 'Design', 40443),
 (4, '2021-09-02', 'Transfer', 40443),
-(5, '2021-09-02', 'Application', 40443),
-(6, '2021-09-02', 'Layers', 40443)
+(5, '2021-09-02', 'Application', 40443)
 ;
 
 insert into enrollment (id, student_email, student_name, course_id)  values
