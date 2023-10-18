@@ -36,6 +36,7 @@ public class RegistrationServiceREST implements RegistrationService {
 	public void sendFinalGrades(int course_id , FinalGradeDTO[] grades) { 
 		
 		//TODO use restTemplate to send final grades to registration service
+		restTemplate.put(registration_url + course_id, grades);
 		
 	}
 	
@@ -59,7 +60,15 @@ public class RegistrationServiceREST implements RegistrationService {
 		System.out.println("GradeBook addEnrollment "+enrollmentDTO);
 		
 		//TODO remove following statement when complete.
-		return null;
+		Course c = courseRepository.findById(enrollmentDTO.courseId()).orElse(null);
+		Enrollment newCourseEnrollment = new Enrollment();
+		newCourseEnrollment.setCourse(c);
+		newCourseEnrollment.setStudentName(enrollmentDTO.studentName());
+		newCourseEnrollment.setStudentEmail(enrollmentDTO.studentEmail());
+		enrollmentRepository.save(newCourseEnrollment);
+
+
+		return enrollmentDTO;
 		
 	}
 
